@@ -3,10 +3,7 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Grafana --"
-        },
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -15,7 +12,7 @@
       }
     ]
   },
-  "description": "DocBits Performance Analysis - Response Times, Auto Processing Rates, and Field Accuracy",
+  "description": "DocBits Performance Analysis - Response Times, Auto Processing, Field Accuracy",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -24,66 +21,38 @@
   "panels": [
     {
       "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
       "panels": [],
-      "title": "Response Time Analysis - Is DocBits Really Slow?",
+      "title": "Response Time Analysis",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 30
-              },
-              {
-                "color": "red",
-                "value": 60
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "red", "value": 60 }
             ]
           },
           "unit": "s"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 0,
-        "y": 1
-      },
+      "gridPos": { "h": 6, "w": 4, "x": 0, "y": 1 },
       "id": 1,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -91,69 +60,43 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY d.extraction_time) AS p50_extraction\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY d.extraction_time) AS p50\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "P50 Extraction Time (Prod)",
+      "title": "P50 Extraction",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 60
-              },
-              {
-                "color": "red",
-                "value": 120
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 120 }
             ]
           },
           "unit": "s"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 4,
-        "y": 1
-      },
+      "gridPos": { "h": 6, "w": 4, "x": 4, "y": 1 },
       "id": 2,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -161,69 +104,43 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY d.extraction_time) AS p90_extraction\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY d.extraction_time) AS p90\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "P90 Extraction Time (Prod)",
+      "title": "P90 Extraction",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 120
-              },
-              {
-                "color": "red",
-                "value": 180
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 120 },
+              { "color": "red", "value": 180 }
             ]
           },
           "unit": "s"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 8,
-        "y": 1
-      },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 1 },
       "id": 3,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -231,334 +148,75 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY d.extraction_time) AS p99_extraction\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY d.extraction_time) AS p99\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "P99 Extraction Time (Prod)",
+      "title": "P99 Extraction",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 10
-              },
-              {
-                "color": "red",
-                "value": 30
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 12,
-        "y": 1
-      },
-      "id": 4,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY d.export_time) AS p50_export\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.export_time IS NOT NULL\n  AND d.export_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
-          "refId": "A"
-        }
-      ],
-      "title": "P50 Export Time (Prod)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 30
-              },
-              {
-                "color": "red",
-                "value": 60
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 16,
-        "y": 1
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY d.export_time) AS p90_export\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.export_time IS NOT NULL\n  AND d.export_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
-          "refId": "A"
-        }
-      ],
-      "title": "P90 Export Time (Prod)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 60
-              },
-              {
-                "color": "red",
-                "value": 120
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 20,
-        "y": 1
-      },
-      "id": 6,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY d.export_time) AS p99_export\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.export_time IS NOT NULL\n  AND d.export_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
-          "refId": "A"
-        }
-      ],
-      "title": "P99 Export Time (Prod)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "Documents",
             "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "bars",
             "fillOpacity": 80,
             "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "scaleDistribution": { "type": "linear" },
+            "thresholdsStyle": { "mode": "off" }
           },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 6
-      },
-      "id": 7,
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 1 },
+      "id": 4,
       "options": {
-        "legend": {
-          "calcs": ["sum"],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "barRadius": 0.1,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "orientation": "horizontal",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CASE\n    WHEN d.extraction_time < 10 THEN '0-10s (Fast)'\n    WHEN d.extraction_time < 30 THEN '10-30s (Normal)'\n    WHEN d.extraction_time < 60 THEN '30-60s (Slow)'\n    WHEN d.extraction_time < 120 THEN '60-120s (Very Slow)'\n    ELSE '120s+ (Critical)'\n  END AS time_bucket,\n  COUNT(*) AS document_count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY time_bucket\nORDER BY \n  CASE time_bucket\n    WHEN '0-10s (Fast)' THEN 1\n    WHEN '10-30s (Normal)' THEN 2\n    WHEN '30-60s (Slow)' THEN 3\n    WHEN '60-120s (Very Slow)' THEN 4\n    ELSE 5\n  END",
+          "rawSql": "SELECT\n  CASE\n    WHEN d.extraction_time < 10 THEN '1. Fast (0-10s)'\n    WHEN d.extraction_time < 30 THEN '2. Normal (10-30s)'\n    WHEN d.extraction_time < 60 THEN '3. Slow (30-60s)'\n    ELSE '4. Very Slow (60s+)'\n  END AS speed,\n  COUNT(*) AS docs\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)\nGROUP BY speed\nORDER BY speed",
           "refId": "A"
         }
       ],
-      "title": "Extraction Time Distribution (Prod) - How Fast Are We Really?",
+      "title": "Speed Distribution - How Fast Are We?",
       "type": "barchart"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -570,241 +228,77 @@
             "drawStyle": "line",
             "fillOpacity": 20,
             "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
+            "scaleDistribution": { "type": "linear" },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "line"
-            }
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "line" }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 30
-              },
-              {
-                "color": "red",
-                "value": 60
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 30 },
+              { "color": "red", "value": 60 }
             ]
           },
           "unit": "s"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 6
-      },
-      "id": 8,
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 7 },
+      "id": 5,
       "options": {
-        "legend": {
-          "calcs": ["mean", "max"],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
       },
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('hour', d.created_on) AS time,\n  AVG(d.extraction_time) AS avg_extraction_time,\n  PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY d.extraction_time) AS p90_extraction_time\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY date_trunc('hour', d.created_on)\nORDER BY time",
+          "rawSql": "SELECT\n  date_trunc('hour', d.created_on) AS time,\n  AVG(d.extraction_time) AS avg_extraction,\n  PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY d.extraction_time) AS p90_extraction\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)\nGROUP BY date_trunc('hour', d.created_on)\nORDER BY time",
           "refId": "A"
         }
       ],
-      "title": "Extraction Time Trend (Prod) - Average & P90 Over Time",
+      "title": "Extraction Time Trend (Avg & P90)",
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-GrYlRd"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "Avg Extraction Time (s)",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "scheme",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 30
-              },
-              {
-                "color": "red",
-                "value": 60
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 14
-      },
-      "id": 9,
-      "options": {
-        "barRadius": 0.05,
-        "barWidth": 0.8,
-        "colorByField": "avg_extraction_time",
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "orientation": "horizontal",
-        "showValue": "always",
-        "stacking": "none",
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 100
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  oc.name AS organization_name,\n  ROUND(AVG(d.extraction_time)::numeric, 2) AS avg_extraction_time,\n  COUNT(*) AS doc_count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.extraction_time IS NOT NULL\n  AND d.extraction_time > 0\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY oc.name\nHAVING COUNT(*) >= 10\nORDER BY avg_extraction_time DESC\nLIMIT 20",
-          "refId": "A"
-        }
-      ],
-      "title": "Slowest Organizations by Extraction Time (Prod) - Who Experiences Delays?",
-      "type": "barchart"
-    },
-    {
       "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 24
-      },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 15 },
       "id": 200,
       "panels": [],
-      "title": "Automatic Processing Analysis",
+      "title": "Automatic Processing",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 0,
-        "y": 25
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 0, "y": 16 },
       "id": 10,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -812,61 +306,36 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS total_documents\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT COUNT(*) AS total\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Total Documents Processed (Prod)",
+      "title": "Total Processed",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 4,
-        "y": 25
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 4, "y": 16 },
       "id": 11,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -874,70 +343,44 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS auto_processed_count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.auto_processed = true\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT COUNT(*) AS auto_count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.auto_processed = true\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Auto-Processed Documents (Prod)",
+      "title": "Auto-Processed",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "max": 100,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 50
-              },
-              {
-                "color": "green",
-                "value": 80
-              }
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "green", "value": 80 }
             ]
           },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 8,
-        "y": 25
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 8, "y": 16 },
       "id": 12,
       "options": {
         "minVizHeight": 75,
         "minVizWidth": 75,
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
         "sizing": "auto"
@@ -945,61 +388,36 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT \n  ROUND(\n    (COUNT(*) FILTER (WHERE d.auto_processed = true)::numeric * 100) / \n    NULLIF(COUNT(*)::numeric, 0), \n    1\n  ) AS auto_processing_rate\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT \n  ROUND(\n    (COUNT(*) FILTER (WHERE d.auto_processed = true)::numeric * 100) / \n    NULLIF(COUNT(*)::numeric, 0), 1\n  ) AS rate\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Auto-Processing Rate (Prod)",
+      "title": "Auto Rate %",
       "type": "gauge"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange",
-                "value": null
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 12,
-        "y": 25
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 12, "y": 16 },
       "id": 13,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -1007,562 +425,85 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS manual_processed_count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND (d.auto_processed = false OR d.auto_processed IS NULL)\n  AND d.status IN ('finished', 'exported')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT COUNT(*) AS exported\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported')\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Manually Processed & Exported (Prod)",
+      "title": "Exported",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "purple",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 16,
-        "y": 25
-      },
-      "id": 14,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS exported_count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
-          "refId": "A"
-        }
-      ],
-      "title": "Total Exported Documents (Prod)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 20,
-        "y": 25
-      },
-      "id": 15,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT COUNT(*) AS error_count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status = 'error'\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
-          "refId": "A"
-        }
-      ],
-      "title": "Documents with Errors (Prod)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
+          "color": { "mode": "palette-classic" },
+          "custom": { "hideFrom": { "legend": false, "tooltip": false, "viz": false } },
           "mappings": []
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 30
-      },
-      "id": 16,
+      "gridPos": { "h": 5, "w": 8, "x": 16, "y": 16 },
+      "id": 14,
       "options": {
-        "displayLabels": ["name", "percent"],
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "values": ["value", "percent"]
-        },
+        "displayLabels": ["percent"],
+        "legend": { "displayMode": "table", "placement": "right", "showLegend": true, "values": ["value", "percent"] },
         "pieType": "donut",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": true },
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
       },
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  CASE \n    WHEN d.auto_processed = true THEN 'Auto-Processed'\n    ELSE 'Manual Processing'\n  END AS processing_type,\n  COUNT(*) AS count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY d.auto_processed",
+          "rawSql": "SELECT\n  CASE WHEN d.auto_processed = true THEN 'Auto' ELSE 'Manual' END AS type,\n  COUNT(*) AS count\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND oc.name IN ($organization)\nGROUP BY d.auto_processed",
           "refId": "A"
         }
       ],
-      "title": "Auto vs Manual Processing (Prod)",
+      "title": "Auto vs Manual",
       "type": "piechart"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "opacity",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "smooth",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 16,
-        "x": 8,
-        "y": 30
-      },
-      "id": 17,
-      "options": {
-        "legend": {
-          "calcs": ["sum"],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "time_series",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('hour', d.created_on) AS time,\n  COUNT(*) FILTER (WHERE d.auto_processed = true) AS auto_processed,\n  COUNT(*) FILTER (WHERE d.auto_processed = false OR d.auto_processed IS NULL) AS manual_processed\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY date_trunc('hour', d.created_on)\nORDER BY time",
-          "refId": "A"
-        }
-      ],
-      "title": "Auto vs Manual Processing Over Time (Prod)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 50
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Auto-Processing Rate"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "gradient",
-                  "type": "gauge"
-                }
-              },
-              {
-                "id": "max",
-                "value": 100
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 0,
-        "y": 38
-      },
-      "id": 18,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Auto-Processing Rate"
-          }
-        ]
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  oc.name AS \"Organization\",\n  COUNT(*) AS \"Total Documents\",\n  COUNT(*) FILTER (WHERE d.auto_processed = true) AS \"Auto-Processed\",\n  ROUND(\n    (COUNT(*) FILTER (WHERE d.auto_processed = true)::numeric * 100) / \n    NULLIF(COUNT(*)::numeric, 0), \n    1\n  ) AS \"Auto-Processing Rate\"\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY oc.name\nHAVING COUNT(*) >= 10\nORDER BY \"Auto-Processing Rate\" DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Auto-Processing Rate by Organization (Prod)",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Auto-Processing Rate"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "gradient",
-                  "type": "gauge"
-                }
-              },
-              {
-                "id": "max",
-                "value": 100
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 38
-      },
-      "id": 19,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Total Documents"
-          }
-        ]
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  COALESCE(d.doc_type, 'Unknown') AS \"Document Type\",\n  COUNT(*) AS \"Total Documents\",\n  COUNT(*) FILTER (WHERE d.auto_processed = true) AS \"Auto-Processed\",\n  ROUND(\n    (COUNT(*) FILTER (WHERE d.auto_processed = true)::numeric * 100) / \n    NULLIF(COUNT(*)::numeric, 0), \n    1\n  ) AS \"Auto-Processing Rate\"\nFROM documents d\nJOIN organisation_cache oc ON d.org_id = oc.id\nWHERE d.is_deleted = false\n  AND d.status IN ('finished', 'exported', 'ready_for_validation', 'pending_approval', 'approved')\n  AND $__timeFilter(d.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY d.doc_type\nHAVING COUNT(*) >= 5\nORDER BY \"Total Documents\" DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Auto-Processing Rate by Document Type (Prod)",
-      "type": "table"
-    },
-    {
       "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 48
-      },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
       "id": 300,
       "panels": [],
-      "title": "Field Accuracy Analysis - How Many Fields Need Customer Correction?",
+      "title": "Field Accuracy - How Many Fields Need Correction?",
       "type": "row"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "max": 100,
           "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 80
-              },
-              {
-                "color": "green",
-                "value": 95
-              }
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 80 },
+              { "color": "green", "value": 95 }
             ]
           },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 0,
-        "y": 49
-      },
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 22 },
       "id": 20,
       "options": {
         "minVizHeight": 75,
         "minVizWidth": 75,
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
         "sizing": "auto"
@@ -1570,61 +511,36 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  ROUND(\n    (SUM(dr.fields_correct)::numeric * 100) / \n    NULLIF(SUM(dr.fields_total)::numeric, 0), \n    1\n  ) AS field_accuracy_rate\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT\n  ROUND((SUM(dr.fields_correct)::numeric * 100) / NULLIF(SUM(dr.fields_total)::numeric, 0), 1) AS accuracy\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Overall Field Accuracy Rate (Prod)",
+      "title": "Field Accuracy %",
       "type": "gauge"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 6,
-        "y": 49
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 6, "y": 22 },
       "id": 21,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -1632,61 +548,36 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(dr.fields_total) AS total_fields\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT SUM(dr.fields_total) AS total\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Total Fields Processed (Prod)",
+      "title": "Total Fields",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 10,
-        "y": 49
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 10, "y": 22 },
       "id": 22,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -1694,61 +585,43 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(dr.fields_correct) AS correct_fields\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT SUM(dr.fields_total - dr.fields_correct) AS touched\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Fields Correct (No Touch) (Prod)",
+      "title": "Fields Corrected",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "orange",
-                "value": null
-              }
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 5 }
             ]
           },
           "unit": "none"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 14,
-        "y": 49
-      },
+      "gridPos": { "h": 5, "w": 4, "x": 14, "y": 22 },
       "id": 23,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
         "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "showPercentChange": false,
         "textMode": "auto",
         "wideLayout": true
@@ -1756,398 +629,65 @@
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT SUM(dr.fields_total - dr.fields_correct) AS fields_touched\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
+          "rawSql": "SELECT ROUND(AVG(dr.fields_total - dr.fields_correct)::numeric, 2) AS avg_touched\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND oc.name IN ($organization)",
           "refId": "A"
         }
       ],
-      "title": "Fields Touched/Corrected (Prod)",
+      "title": "Avg Corrections/Doc",
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
+          "color": { "mode": "thresholds" },
+          "custom": { "align": "auto", "cellOptions": { "type": "auto" }, "inspect": false },
           "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 3
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 18,
-        "y": 49
-      },
-      "id": 24,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  ROUND(\n    AVG(dr.fields_total - dr.fields_correct)::numeric, \n    2\n  ) AS avg_fields_touched_per_doc\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')",
-          "refId": "A"
-        }
-      ],
-      "title": "Avg Fields Touched Per Document (Prod)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         },
         "overrides": [
           {
-            "matcher": {
-              "id": "byName",
-              "options": "Accuracy Rate"
-            },
+            "matcher": { "id": "byName", "options": "Accuracy %" },
             "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "gradient",
-                  "type": "gauge"
-                }
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 80
-                    },
-                    {
-                      "color": "green",
-                      "value": 95
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Avg Fields Touched"
-            },
-            "properties": [
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 3
-                    },
-                    {
-                      "color": "red",
-                      "value": 5
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "basic",
-                  "type": "color-background"
-                }
-              }
+              { "id": "unit", "value": "percent" },
+              { "id": "custom.cellOptions", "value": { "mode": "gradient", "type": "gauge" } },
+              { "id": "max", "value": 100 },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 80 }, { "color": "green", "value": 95 }] } }
             ]
           }
         ]
       },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 54
-      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 27 },
       "id": 25,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
-        },
+        "footer": { "countRows": false, "fields": "", "reducer": ["sum"], "show": false },
         "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Documents"
-          }
-        ]
+        "sortBy": [{ "desc": true, "displayName": "Docs" }]
       },
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT\n  COALESCE(dr.doc_type, 'Unknown') AS \"Document Type\",\n  COUNT(*) AS \"Documents\",\n  SUM(dr.fields_total) AS \"Total Fields\",\n  SUM(dr.fields_total - dr.fields_correct) AS \"Fields Touched\",\n  ROUND(\n    (SUM(dr.fields_correct)::numeric * 100) / \n    NULLIF(SUM(dr.fields_total)::numeric, 0), \n    1\n  ) AS \"Accuracy Rate\",\n  ROUND(\n    AVG(dr.fields_total - dr.fields_correct)::numeric, \n    2\n  ) AS \"Avg Fields Touched\"\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY dr.doc_type\nHAVING COUNT(*) >= 5\nORDER BY \"Documents\" DESC",
+          "rawSql": "SELECT\n  COALESCE(dr.doc_type, 'Unknown') AS \"Doc Type\",\n  COUNT(*) AS \"Docs\",\n  ROUND((SUM(dr.fields_correct)::numeric * 100) / NULLIF(SUM(dr.fields_total)::numeric, 0), 1) AS \"Accuracy %\",\n  ROUND(AVG(dr.fields_total - dr.fields_correct)::numeric, 2) AS \"Avg Fixes\"\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND oc.name IN ($organization)\nGROUP BY dr.doc_type\nHAVING COUNT(*) >= 5\nORDER BY \"Docs\" DESC",
           "refId": "A"
         }
       ],
-      "title": "Field Accuracy by Document Type (Prod)",
+      "title": "Accuracy by Document Type",
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
+      "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Accuracy Rate"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "gradient",
-                  "type": "gauge"
-                }
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 80
-                    },
-                    {
-                      "color": "green",
-                      "value": 95
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Avg Fields Touched"
-            },
-            "properties": [
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 3
-                    },
-                    {
-                      "color": "red",
-                      "value": 5
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "basic",
-                  "type": "color-background"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 12,
-        "y": 54
-      },
-      "id": 26,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "Accuracy Rate"
-          }
-        ]
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  oc.name AS \"Organization\",\n  COUNT(*) AS \"Documents\",\n  SUM(dr.fields_total) AS \"Total Fields\",\n  SUM(dr.fields_total - dr.fields_correct) AS \"Fields Touched\",\n  ROUND(\n    (SUM(dr.fields_correct)::numeric * 100) / \n    NULLIF(SUM(dr.fields_total)::numeric, 0), \n    1\n  ) AS \"Accuracy Rate\",\n  ROUND(\n    AVG(dr.fields_total - dr.fields_correct)::numeric, \n    2\n  ) AS \"Avg Fields Touched\"\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY oc.name\nHAVING COUNT(*) >= 10\nORDER BY \"Accuracy Rate\" ASC\nLIMIT 20",
-          "refId": "A"
-        }
-      ],
-      "title": "Organizations with Lowest Field Accuracy (Prod) - Need Training?",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
+          "color": { "mode": "palette-classic" },
           "custom": {
             "axisBorderShow": false,
             "axisCenteredZero": false,
@@ -2159,222 +699,65 @@
             "drawStyle": "line",
             "fillOpacity": 20,
             "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
             "insertNulls": false,
             "lineInterpolation": "smooth",
             "lineWidth": 2,
             "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
+            "scaleDistribution": { "type": "linear" },
             "showPoints": "auto",
             "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "line"
-            }
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "line" }
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 90
-              },
-              {
-                "color": "red",
-                "value": 95
-              }
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 90 },
+              { "color": "green", "value": 95 }
             ]
           },
           "unit": "percent"
         },
         "overrides": []
       },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 66
-      },
-      "id": 27,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 27 },
+      "id": 26,
       "options": {
-        "legend": {
-          "calcs": ["mean", "min", "max"],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "multi",
-          "sort": "desc"
-        }
+        "legend": { "calcs": ["mean", "min", "max"], "displayMode": "table", "placement": "right", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
       },
       "pluginVersion": "12.1.0",
       "targets": [
         {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
+          "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
           "editorMode": "code",
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  date_trunc('day', dr.created_on) AS time,\n  ROUND(\n    (SUM(dr.fields_correct)::numeric * 100) / \n    NULLIF(SUM(dr.fields_total)::numeric, 0), \n    2\n  ) AS field_accuracy_rate\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY date_trunc('day', dr.created_on)\nORDER BY time",
+          "rawSql": "SELECT\n  date_trunc('day', dr.created_on) AS time,\n  ROUND((SUM(dr.fields_correct)::numeric * 100) / NULLIF(SUM(dr.fields_total)::numeric, 0), 2) AS accuracy\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.fields_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND oc.name IN ($organization)\nGROUP BY date_trunc('day', dr.created_on)\nORDER BY time",
           "refId": "A"
         }
       ],
-      "title": "Field Accuracy Trend Over Time (Prod)",
+      "title": "Field Accuracy Trend",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Table Accuracy Rate"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "percent"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "gradient",
-                  "type": "gauge"
-                }
-              },
-              {
-                "id": "max",
-                "value": 100
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 80
-                    },
-                    {
-                      "color": "green",
-                      "value": 95
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 24,
-        "x": 0,
-        "y": 74
-      },
-      "id": 28,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": ["sum"],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Documents"
-          }
-        ]
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "SELECT\n  COALESCE(dr.doc_type, 'Unknown') AS \"Document Type\",\n  COUNT(*) AS \"Documents\",\n  SUM(dr.table_values_total) AS \"Total Table Values\",\n  SUM(dr.table_values_total - dr.table_values_correct) AS \"Table Values Touched\",\n  ROUND(\n    (SUM(dr.table_values_correct)::numeric * 100) / \n    NULLIF(SUM(dr.table_values_total)::numeric, 0), \n    1\n  ) AS \"Table Accuracy Rate\"\nFROM document_report dr\nJOIN organisation_cache oc ON dr.org_id = oc.id\nWHERE dr.is_deleted = false\n  AND dr.table_values_total > 0\n  AND $__timeFilter(dr.created_on)\n  AND ('$organization' = 'All' OR oc.name = '$organization')\nGROUP BY dr.doc_type\nHAVING COUNT(*) >= 5\nORDER BY \"Documents\" DESC",
-          "refId": "A"
-        }
-      ],
-      "title": "Table Value Accuracy by Document Type (Prod)",
-      "type": "table"
     }
   ],
   "preload": false,
   "schemaVersion": 41,
-  "tags": ["performance", "analytics", "production"],
+  "tags": ["performance", "analytics"],
   "templating": {
     "list": [
       {
-        "current": {
-          "selected": true,
-          "text": "All",
-          "value": "All"
-        },
-        "datasource": {
-          "type": "grafana-postgresql-datasource",
-          "uid": "dega8v6bs6mm8d"
-        },
+        "allValue": "",
+        "current": { "selected": true, "text": ["All"], "value": ["$__all"] },
+        "datasource": { "type": "grafana-postgresql-datasource", "uid": "dega8v6bs6mm8d" },
         "definition": "SELECT DISTINCT name FROM organisation_cache WHERE is_deleted = false ORDER BY name",
         "hide": 0,
         "includeAll": true,
         "label": "Organization",
-        "multi": false,
+        "multi": true,
         "name": "organization",
         "options": [],
         "query": "SELECT DISTINCT name FROM organisation_cache WHERE is_deleted = false ORDER BY name",
@@ -2386,23 +769,10 @@
       }
     ]
   },
-  "time": {
-    "from": "now-7d",
-    "to": "now"
-  },
-  "timepicker": {
-    "refresh_intervals": [
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ]
-  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": { "refresh_intervals": ["1m", "5m", "15m", "30m", "1h", "2h", "1d"] },
   "timezone": "browser",
   "title": "DocBits Performance Analysis",
   "uid": "docbits-performance-analysis",
-  "version": 1
+  "version": 2
 }
