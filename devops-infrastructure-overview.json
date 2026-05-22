@@ -48,9 +48,9 @@
           "type": "prometheus",
           "uid": "thanos-global"
         },
-        "definition": "label_values(kube_pod_info{cluster!~\"loki|\\{\\{.*\"}, cluster)",
+        "definition": "label_values(kube_pod_info{cluster=~\"do-fra1.*|do-sfo2.*\"}, cluster)",
         "query": {
-          "query": "label_values(kube_pod_info{cluster!~\"loki|\\{\\{.*\"}, cluster)",
+          "query": "label_values(kube_pod_info{cluster=~\"do-fra1.*|do-sfo2.*\"}, cluster)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 2,
