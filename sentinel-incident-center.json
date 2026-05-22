@@ -198,7 +198,7 @@
           },
           "type": "json",
           "source": "url",
-          "url": "https://api.sentinel.docbits.com/alerts?severity=critical&limit=500",
+          "url": "/alerts?severity=critical&limit=500",
           "url_options": {
             "method": "GET",
             "data": ""
@@ -277,7 +277,7 @@
           },
           "type": "json",
           "source": "url",
-          "url": "https://api.sentinel.docbits.com/alerts?severity=error&limit=500",
+          "url": "/alerts?severity=error&limit=500",
           "url_options": {
             "method": "GET",
             "data": ""
@@ -356,7 +356,7 @@
           },
           "type": "json",
           "source": "url",
-          "url": "https://api.sentinel.docbits.com/alerts?severity=warning&limit=500",
+          "url": "/alerts?severity=warning&limit=500",
           "url_options": {
             "method": "GET",
             "data": ""
@@ -435,7 +435,7 @@
           },
           "type": "json",
           "source": "url",
-          "url": "https://api.sentinel.docbits.com/alerts?severity=info&limit=500",
+          "url": "/alerts?severity=info&limit=500",
           "url_options": {
             "method": "GET",
             "data": ""
@@ -650,7 +650,7 @@
           },
           "type": "json",
           "source": "url",
-          "url": "https://api.sentinel.docbits.com/alerts?limit=300",
+          "url": "/alerts?limit=300",
           "url_options": {
             "method": "GET",
             "data": ""
@@ -1140,7 +1140,7 @@
           },
           "type": "json",
           "source": "url",
-          "url": "https://api.sentinel.docbits.com/events?severity=warning&limit=200",
+          "url": "/events?severity=warning&limit=200",
           "url_options": {
             "method": "GET",
             "data": ""
