@@ -151,7 +151,7 @@
             "type": "prometheus",
             "uid": "thanos-global"
           },
-          "expr": "count(kube_pod_status_phase{cluster=~\"$cluster\", namespace=~\"$namespace\", phase=\"Running\"}) or vector(0)",
+          "expr": "sum(kube_pod_status_phase{cluster=~\"$cluster\", namespace=~\"$namespace\", phase=\"Running\"}) or vector(0)",
           "instant": true,
           "legendFormat": "Running Pods",
           "refId": "A"
@@ -216,7 +216,7 @@
             "type": "prometheus",
             "uid": "thanos-global"
           },
-          "expr": "count(kube_pod_status_phase{cluster=~\"$cluster\", namespace=~\"$namespace\", phase=\"Pending\"}) or vector(0)",
+          "expr": "sum(kube_pod_status_phase{cluster=~\"$cluster\", namespace=~\"$namespace\", phase=\"Pending\"}) or vector(0)",
           "instant": true,
           "legendFormat": "Pending Pods",
           "refId": "A"
@@ -281,7 +281,7 @@
             "type": "prometheus",
             "uid": "thanos-global"
           },
-          "expr": "count(kube_pod_status_phase{cluster=~\"$cluster\", namespace=~\"$namespace\", phase=\"Failed\"}) or vector(0)",
+          "expr": "sum(kube_pod_status_phase{cluster=~\"$cluster\", namespace=~\"$namespace\", phase=\"Failed\"}) or vector(0)",
           "instant": true,
           "legendFormat": "Failed Pods",
           "refId": "A"
@@ -1300,7 +1300,7 @@
             "type": "prometheus",
             "uid": "thanos-global"
           },
-          "expr": "sum(celery_workers{cluster=~\"$cluster\", namespace=~\"$namespace\"}) or vector(0)",
+          "expr": "sum(celery_active_worker_count{cluster=~\"$cluster\", namespace=~\"$namespace\"}) or vector(0)",
           "instant": true,
           "legendFormat": "Active Workers",
           "refId": "A"
@@ -1361,7 +1361,7 @@
             "type": "prometheus",
             "uid": "thanos-global"
           },
-          "expr": "sum(celery_active_tasks{cluster=~\"$cluster\", namespace=~\"$namespace\"}) or vector(0)",
+          "expr": "sum(celery_worker_tasks_active{cluster=~\"$cluster\", namespace=~\"$namespace\"}) or vector(0)",
           "instant": true,
           "legendFormat": "Active Tasks",
           "refId": "A"
@@ -1666,8 +1666,8 @@
             "type": "prometheus",
             "uid": "thanos-global"
           },
-          "expr": "sum by (cluster, task_name) (rate(celery_task_failed_total{cluster=~\"$cluster\", namespace=~\"$namespace\"}[5m]))",
-          "legendFormat": "{{cluster}} / {{task_name}}",
+          "expr": "sum by (cluster, name) (rate(celery_task_failed_total{cluster=~\"$cluster\", namespace=~\"$namespace\"}[5m]))",
+          "legendFormat": "{{cluster}} / {{name}}",
           "refId": "A"
         }
       ]
@@ -2115,6 +2115,380 @@
           },
           "expr": "sum by (cluster, instance) (redis_memory_used_bytes{cluster=~\"$cluster\", namespace=~\"$namespace\"})",
           "legendFormat": "{{cluster}} / {{instance}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "id": 106,
+      "title": "PostgreSQL",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 66,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "id": 27,
+      "title": "Active Connections",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos-global"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "thanos-global"
+          },
+          "expr": "sum(pg_stat_database_numbackends{cluster=~\"$cluster\", namespace=~\"$namespace\"})",
+          "instant": true,
+          "legendFormat": "Active Connections",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 28,
+      "title": "DB Size",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos-global"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 67,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10000000000 },
+              { "color": "red", "value": 50000000000 }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "thanos-global"
+          },
+          "expr": "sum(pg_database_size_bytes{cluster=~\"$cluster\", namespace=~\"$namespace\"})",
+          "instant": true,
+          "legendFormat": "DB Size",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 29,
+      "title": "Deadlocks (1h)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos-global"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 67,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "thanos-global"
+          },
+          "expr": "sum(increase(pg_stat_database_deadlocks{cluster=~\"$cluster\", namespace=~\"$namespace\"}[1h])) or vector(0)",
+          "instant": true,
+          "legendFormat": "Deadlocks",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "id": 30,
+      "title": "Long Running Transactions",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos-global"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 67,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "thanos-global"
+          },
+          "expr": "sum(pg_long_running_transactions{cluster=~\"$cluster\", namespace=~\"$namespace\"}) or vector(0)",
+          "instant": true,
+          "legendFormat": "Long Running Txns",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 31,
+      "title": "DB Connections Over Time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos-global"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 71,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": ["last", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "thanos-global"
+          },
+          "expr": "sum by (cluster, datname) (pg_stat_database_numbackends{cluster=~\"$cluster\", namespace=~\"$namespace\", datname!~\"template.*|postgres\"})",
+          "legendFormat": "{{cluster}} / {{datname}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "id": 32,
+      "title": "DB Size Over Time",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "thanos-global"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 71,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "calcs": ["last", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "thanos-global"
+          },
+          "expr": "sum by (cluster, datname) (pg_database_size_bytes{cluster=~\"$cluster\", namespace=~\"$namespace\", datname!~\"template.*|postgres\"})",
+          "legendFormat": "{{cluster}} / {{datname}}",
           "refId": "A"
         }
       ]
