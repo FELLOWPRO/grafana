@@ -80,7 +80,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({namespace=~\"$namespace\"}[5m]))",
+          "expr": "sum(count_over_time({cluster=~\"$cluster\", namespace=~\"$namespace\"}[5m]))",
           "refId": "A"
         }
       ],
@@ -141,7 +141,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (namespace) (count_over_time({namespace=~\"$namespace\"}[5m]))",
+          "expr": "sum by (cluster, namespace) (count_over_time({cluster=~\"$cluster\", namespace=~\"$namespace\"}[5m]))",
           "refId": "A"
         }
       ],
@@ -202,11 +202,11 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (app) (count_over_time({namespace=~\"$namespace\"}[5m]))",
+          "expr": "sum by (cluster) (count_over_time({cluster=~\"$cluster\", namespace=~\"$namespace\"}[5m]))",
           "refId": "A"
         }
       ],
-      "title": "Logs by App",
+      "title": "Logs by Cluster",
       "type": "piechart"
     },
     {
@@ -304,7 +304,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (namespace) (rate({namespace=~\"$namespace\"}[1m]))",
+          "expr": "sum by (cluster, namespace) (rate({cluster=~\"$cluster\", namespace=~\"$namespace\"}[1m]))",
           "refId": "A"
         }
       ],
@@ -393,11 +393,11 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(rate({namespace=~\"$namespace\"}[1m]))",
+          "expr": "sum by (cluster) (rate({cluster=~\"$cluster\", namespace=~\"$namespace\", severity=\"error\"}[1m]))",
           "refId": "A"
         }
       ],
-      "title": "Total Log Rate",
+      "title": "Error Rate by Cluster",
       "type": "timeseries"
     },
     {
@@ -441,12 +441,12 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{namespace=~\"$namespace\", app=~\"$app\"} | json | __error__=\"\" | line_format \"{{__line__}}\" |~ \"(?i)$search\"",
+          "expr": "{cluster=~\"$cluster\", namespace=~\"$namespace\", pod_name=~\"$pod\"} | json | __error__=\"\" |~ \"(?i)$search\"",
           "maxLines": 100,
           "refId": "A"
         }
       ],
-      "title": "Application Logs (JSON-aware search)",
+      "title": "Application Logs",
       "type": "logs"
     }
   ],
@@ -461,33 +461,25 @@
   "templating": {
     "list": [
       {
-        "allValue": "sandbox|demo|prod",
+        "allValue": ".+",
         "current": {
           "selected": true,
-          "text": [
-            "sandbox",
-            "demo",
-            "prod"
-          ],
-          "value": [
-            "sandbox",
-            "demo",
-            "prod"
-          ]
+          "text": ["All"],
+          "value": ["$__all"]
         },
         "datasource": {
           "type": "loki",
           "uid": "loki"
         },
-        "definition": "label_values(namespace)",
+        "definition": "label_values(cluster)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
-        "name": "namespace",
+        "name": "cluster",
         "options": [],
-        "query": "label_values(namespace)",
+        "query": "label_values(cluster)",
         "refresh": 1,
-        "regex": "^(sandbox|demo|prod)$",
+        "regex": "",
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
@@ -496,25 +488,45 @@
         "allValue": ".+",
         "current": {
           "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "text": ["All"],
+          "value": ["$__all"]
         },
         "datasource": {
           "type": "loki",
           "uid": "loki"
         },
-        "definition": "label_values({namespace=~\"$namespace\"}, app)",
+        "definition": "label_values({cluster=~\"$cluster\"}, namespace)",
         "hide": 0,
         "includeAll": true,
         "multi": true,
-        "name": "app",
+        "name": "namespace",
         "options": [],
-        "query": "label_values({namespace=~\"$namespace\"}, app)",
-        "refresh": 1,
+        "query": "label_values({cluster=~\"$cluster\"}, namespace)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".+",
+        "current": {
+          "selected": true,
+          "text": ["All"],
+          "value": ["$__all"]
+        },
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "label_values({cluster=~\"$cluster\", namespace=~\"$namespace\"}, pod_name)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": true,
+        "name": "pod",
+        "options": [],
+        "query": "label_values({cluster=~\"$cluster\", namespace=~\"$namespace\"}, pod_name)",
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 1,
@@ -527,7 +539,7 @@
           "value": ""
         },
         "hide": 0,
-        "label": "Search Text (searches in JSON fields + raw text)",
+        "label": "Search",
         "name": "search",
         "options": [
           {
