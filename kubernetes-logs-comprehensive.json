@@ -71,63 +71,18 @@
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
-      "id": 20, "panels": [], "title": "Log Trends", "type": "row"
-    },
-    {
-      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
-      "fieldConfig": {
-        "defaults": { "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "pointSize": 5,
-            "showPoints": "never", "spanNulls": false, "thresholdsStyle": { "mode": "off" } },
-          "mappings": [], "thresholds": { "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "id": 21,
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" } },
-      "targets": [{
-        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
-        "expr": "namespace:=$namespace | stats by (namespace) count() as logs",
-        "queryType": "range", "step": "1m", "refId": "A"
-      }],
-      "title": "Log Rate by Namespace", "type": "timeseries"
-    },
-    {
-      "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
-      "fieldConfig": {
-        "defaults": { "color": { "mode": "palette-classic" },
-          "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 1, "pointSize": 5,
-            "showPoints": "never", "spanNulls": false, "thresholdsStyle": { "mode": "off" } },
-          "mappings": [], "thresholds": { "steps": [{ "color": "green", "value": null }] }, "unit": "short" },
-        "overrides": []
-      },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "id": 22,
-      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
-        "tooltip": { "mode": "single", "sort": "none" } },
-      "targets": [{
-        "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
-        "expr": "namespace:=$namespace level:=\"error\" OR level:=\"ERROR\" | stats by (namespace) count() as errors",
-        "queryType": "range", "step": "1m", "refId": "A"
-      }],
-      "title": "Error Rate by Namespace", "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
       "id": 30, "panels": [], "title": "Log Browser", "type": "row"
     },
     {
       "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
-      "gridPos": { "h": 20, "w": 24, "x": 0, "y": 17 },
+      "gridPos": { "h": 20, "w": 24, "x": 0, "y": 8 },
       "id": 1,
       "options": { "dedupStrategy": "exact", "enableLogDetails": true, "prettifyLogMessage": true,
         "showCommonLabels": false, "showLabels": true, "showTime": true,
         "sortOrder": "Descending", "wrapLogMessage": true },
       "targets": [{
         "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
-        "expr": "namespace:=$namespace pod_name:=$pod $search",
+        "expr": "namespace:=$namespace $search",
         "queryType": "logs", "maxLines": 200, "refId": "A"
       }],
       "title": "Application Logs", "type": "logs"
@@ -176,16 +131,6 @@
         "type": "custom"
       },
       {
-        "current": { "selected": false, "text": "*", "value": "*" },
-        "hide": 0,
-        "label": "Pod",
-        "name": "pod",
-        "options": [{ "selected": true, "text": "*", "value": "*" }],
-        "query": "*",
-        "skipUrlSync": false,
-        "type": "textbox"
-      },
-      {
         "current": { "selected": false, "text": "", "value": "" },
         "hide": 0,
         "label": "Search",
@@ -202,6 +147,6 @@
   "timezone": "",
   "title": "Kubernetes Logs - Comprehensive",
   "uid": "kubernetes-logs-comprehensive",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
