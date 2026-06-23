@@ -83,7 +83,7 @@
       "targets": [{
         "datasource": { "type": "victoriametrics-logs-datasource", "uid": "${datasource}" },
         "expr": "namespace:=$namespace $search",
-        "queryType": "logs", "maxLines": 2000, "refId": "A"
+        "queryType": "logs", "maxLines": 5000, "refId": "A"
       }],
       "title": "Application Logs", "type": "logs"
     }
