@@ -27,7 +27,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 2,
+        "h": 3,
         "w": 24,
         "x": 0,
         "y": 0
@@ -39,7 +39,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "**Automated Documents** = Documents where status changed from `ready_for_validation` in less than 60 seconds (no manual intervention required)",
+        "content": "**Automated Documents** = Documents where `auto_processed = true`, OR documents that moved out of `ready_for_validation` status within **5 seconds** of reaching it (no manual intervention required). Org lists and time range are controlled by the dashboard time picker and the `org_*` variables below.",
         "mode": "markdown"
       },
       "pluginVersion": "12.1.0",
@@ -47,9 +47,22 @@
       "type": "text"
     },
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 200,
+      "panels": [],
+      "title": "Prod EU",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "betod90qal8g0e"
+        "uid": "apiprodeu01"
       },
       "fieldConfig": {
         "defaults": {
@@ -88,15 +101,17 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 2
+        "y": 4
       },
-      "id": 100,
+      "id": 201,
       "options": {
         "minVizHeight": 75,
         "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -109,107 +124,39 @@
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "betod90qal8g0e"
+            "uid": "apiprodeu01"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE \n        is_deleted = FALSE\n        AND $__timeFilter(created_on)\n)\nSELECT\n    ROUND(\n        (COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        )::NUMERIC * 100)\n        /\n        NULLIF(\n            COUNT(sc.doc_id) FILTER (\n                WHERE \n                    sc.current_status = 'ready_for_validation'\n            ), \n            0\n        ),\n        1\n    ) AS \"Automation Rate\"\nFROM status_changes sc\nJOIN public.organisation_cache oc\n    ON sc.org_id = oc.id\nWHERE \n    oc.name IN ($org_sandbox);",
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        1\n    ) AS \"Automation Rate\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_prod_eu);",
           "refId": "A",
           "sql": {
-            "columns": [{"parameters": [], "type": "function"}],
-            "groupBy": [{"property": {"type": "string"}, "type": "groupBy"}],
-            "limit": 50
-          }
-        }
-      ],
-      "title": "Sandbox - Overall Automation Rate",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+            "columns": [
               {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 30
-              },
-              {
-                "color": "yellow",
-                "value": 60
-              },
-              {
-                "color": "green",
-                "value": 80
+                "parameters": [],
+                "type": "function"
               }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 6,
-        "y": 2
-      },
-      "id": 101,
-      "options": {
-        "minVizHeight": 75,
-        "minVizWidth": 75,
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": ["lastNotNull"],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "sizing": "auto"
-      },
-      "pluginVersion": "12.1.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
-          },
-          "editorMode": "code",
-          "format": "table",
-          "rawQuery": true,
-          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE \n        is_deleted = FALSE\n        AND $__timeFilter(created_on)\n)\nSELECT\n    ROUND(\n        (COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        )::NUMERIC * 100)\n        /\n        NULLIF(\n            COUNT(sc.doc_id) FILTER (\n                WHERE \n                    sc.current_status = 'ready_for_validation'\n            ), \n            0\n        ),\n        1\n    ) AS \"Automation Rate\"\nFROM status_changes sc\nJOIN public.organisation_cache oc\n    ON sc.org_id::uuid = oc.id::uuid\nWHERE \n    oc.name IN ($org_prod);",
-          "refId": "A",
-          "sql": {
-            "columns": [{"parameters": [], "type": "function"}],
-            "groupBy": [{"property": {"type": "string"}, "type": "groupBy"}],
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
             "limit": 50
           }
         }
       ],
-      "title": "Prod - Overall Automation Rate",
+      "title": "Prod EU - Overall Automation Rate",
       "type": "gauge"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "betod90qal8g0e"
+        "uid": "apiprodeu01"
       },
       "fieldConfig": {
         "defaults": {
@@ -228,12 +175,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 2
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 4
       },
-      "id": 5,
+      "id": 202,
       "options": {
         "displayLabels": [],
         "legend": {
@@ -260,12 +207,12 @@
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "betod90qal8g0e"
+            "uid": "apiprodeu01"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id, \n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on,\n        LEAD(current_status) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_status\n    FROM public.document_log\n    WHERE \n        is_deleted = FALSE\n        AND $__timeFilter(created_on)\n),\nautomated_counts AS (\n    SELECT\n        oc.name AS org_name, \n        d.doc_type, \n        COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        ) AS automated_documents_count\n    FROM status_changes sc\n    JOIN public.documents d \n        ON sc.doc_id = d.id \n    JOIN public.organisation_cache oc\n        -- KORREKTUR: Beides explizit in UUID konvertieren\n        ON sc.org_id::uuid = oc.id::uuid\n    \n    -- HIER KOMMT DIE FILTERUNG DURCH DIE GRAFANA-VARIABLE HIN\n    WHERE\n        oc.name IN ($org_sandbox) \n    \n    GROUP BY oc.name, d.doc_type\n    \n    HAVING COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        ) > 0\n)\nSELECT\n    org_name AS \"Organization\",\n    doc_type AS \"Document Type\",\n    automated_documents_count AS \"Automated Documents Count\",\n    ROUND(\n        (automated_documents_count::NUMERIC * 100) / \n        SUM(automated_documents_count) OVER (), \n        2\n    )::TEXT || '%' AS \"Automation Share Percent\"\n\nFROM automated_counts\nORDER BY \n    \"Organization\",\n    \"Automated Documents Count\" DESC;",
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n),\nautomated_counts AS (\n    SELECT\n        oc.name AS org_name,\n        q.doc_type,\n        COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS automated_documents_count\n    FROM qualified q\n    JOIN public.organisation_cache oc ON q.org_id = oc.id\n    WHERE oc.name IN ($org_prod_eu)\n    GROUP BY oc.name, q.doc_type\n    HAVING COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) > 0\n)\nSELECT\n    org_name AS \"Organization\",\n    doc_type AS \"Document Type\",\n    automated_documents_count AS \"Automated Documents Count\",\n    ROUND(\n        (automated_documents_count::NUMERIC * 100) / SUM(automated_documents_count) OVER (),\n        2\n    )::TEXT || '%' AS \"Automation Share Percent\"\nFROM automated_counts\nORDER BY \"Organization\", \"Automated Documents Count\" DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -286,13 +233,13 @@
           }
         }
       ],
-      "title": "Automation Breakdown by Document Type (Sandbox)",
+      "title": "Automation Breakdown by Document Type (Prod EU)",
       "type": "piechart"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "betod90qal8g0e"
+        "uid": "apiprodeu01"
       },
       "fieldConfig": {
         "defaults": {
@@ -333,11 +280,11 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 10
       },
-      "id": 1,
+      "id": 203,
       "options": {
         "cellHeight": "sm",
         "footer": {
@@ -355,12 +302,12 @@
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "betod90qal8g0e"
+            "uid": "apiprodeu01"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on,\n        LEAD(current_status) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_status\n    FROM public.document_log\n    WHERE \n        is_deleted = FALSE\n        -- HIER ist der Grafana Zeitfilter eingebaut\n        AND $__timeFilter(created_on)\n)\nSELECT\n    oc.name AS \"Organization\",\n    \n\n    \n    -- NEW NAME: automated_count\n    COUNT(sc.doc_id) FILTER (\n        WHERE \n            sc.current_status = 'ready_for_validation'\n            AND sc.next_created_on IS NOT NULL\n            AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n    ) AS \"Automated Documents\",\n    \n    -- NEW NAME: total_qualified_documents\n    COUNT(sc.doc_id) FILTER (\n        WHERE \n            sc.current_status = 'ready_for_validation'\n    ) AS \"Total Documents\",\n    \n    -- NEW NAME: automation_rate_percent\n    (\n        ROUND(\n            (COUNT(sc.doc_id) FILTER (\n                WHERE \n                    sc.current_status = 'ready_for_validation'\n                    AND sc.next_created_on IS NOT NULL\n                    AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n            )::NUMERIC * 100)\n            /\n            NULLIF(\n                COUNT(sc.doc_id) FILTER (\n                    WHERE \n                        sc.current_status = 'ready_for_validation'\n                ), \n                0\n            ),\n            2\n        )\n    )::TEXT || '%' AS \"Automation Rate Percent\"\n    \nFROM status_changes sc\nJOIN public.organisation_cache oc\n    ON sc.org_id = oc.id\n-- NEUE WHERE-KLAUSEL HINZUFÜGEN:\nWHERE \n    oc.name IN ($org_sandbox)\nGROUP BY oc.name\n-- Sortierung nach der numerischen Prozent-Berechnung (absteigend)\nORDER BY \n    ROUND(\n        (COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        )::NUMERIC * 100)\n        /\n        NULLIF(\n            COUNT(sc.doc_id) FILTER (\n                WHERE \n                    sc.current_status = 'ready_for_validation'\n            ), \n            0\n        ),\n        2\n    ) DESC;",
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    oc.name AS \"Organization\",\n    COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS \"Automated Documents\",\n    COUNT(*) AS \"Total Documents\",\n    (ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ))::TEXT || '%' AS \"Automation Rate Percent\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_prod_eu)\nGROUP BY oc.name\nORDER BY ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ) DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -381,73 +328,93 @@
           }
         }
       ],
-      "title": "Sandbox",
+      "title": "Prod EU - Automation Rate by Organization",
       "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 204,
+      "panels": [],
+      "title": "Prod US",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
+        "uid": "fpusda6bs6mm8e"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
           },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
           "mappings": [],
+          "max": 100,
+          "min": 0,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": 0
+                "color": "red",
+                "value": null
               },
               {
-                "color": "red",
+                "color": "orange",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 6,
+        "w": 6,
         "x": 0,
-        "y": 18
+        "y": 19
       },
-      "id": 4,
+      "id": 205,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
           ],
-          "show": false
+          "fields": "",
+          "values": false
         },
-        "showHeader": true
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
       "pluginVersion": "12.1.0",
       "targets": [
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
+            "uid": "fpusda6bs6mm8e"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on,\n        LEAD(current_status) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_status\n    FROM public.document_log\n    WHERE \n        is_deleted = FALSE\n        -- HIER ist der Grafana Zeitfilter eingebaut\n        AND $__timeFilter(created_on)\n)\nSELECT\n    oc.name AS \"Organization\",\n    \n\n    \n    -- Umbenannt zu automated_count\n    COUNT(sc.doc_id) FILTER (\n        WHERE \n            sc.current_status = 'ready_for_validation'\n            AND sc.next_created_on IS NOT NULL\n            AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n    ) AS \"Automated Documents\",\n    \n    -- Umbenannt zu total_qualified_documents\n    COUNT(sc.doc_id) FILTER (\n        WHERE \n            sc.current_status = 'ready_for_validation'\n    ) AS \"Total Documents\",\n    \n    -- Umbenannt zu automation_rate_percent\n    (\n        ROUND(\n            (COUNT(sc.doc_id) FILTER (\n                WHERE \n                    sc.current_status = 'ready_for_validation'\n                    AND sc.next_created_on IS NOT NULL\n                    AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n            )::NUMERIC * 100)\n            /\n            NULLIF(\n                COUNT(sc.doc_id) FILTER (\n                    WHERE \n                        sc.current_status = 'ready_for_validation'\n                ), \n                0\n            ),\n            2\n        )\n    )::TEXT || '%' AS \"Automation Rate Percent\"\n    \n-- ... (innerhalb der SELECT-Abfrage)\nFROM status_changes sc\nJOIN public.organisation_cache oc\n    -- NEU: Konvertierung von oc.id (falls VARCHAR) in UUID für den Vergleich\n    ON sc.org_id::uuid = oc.id::uuid\n\n-- HIER KOMMT DER FILTER HIN\nWHERE oc.name IN ($org_prod) \n\nGROUP BY oc.name\n-- WICHTIG: NEU sortiert nach der gesamten Prozent-Berechnung (numerisch)\nORDER BY\n-- ... (restliche ORDER BY Logik)\n    ROUND(\n        (COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        )::NUMERIC * 100)\n        /\n        NULLIF(\n            COUNT(sc.doc_id) FILTER (\n                WHERE \n                    sc.current_status = 'ready_for_validation'\n            ), \n            0\n        ),\n        2\n    ) DESC;",
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        1\n    ) AS \"Automation Rate\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_prod_us);",
           "refId": "A",
           "sql": {
             "columns": [
@@ -468,13 +435,13 @@
           }
         }
       ],
-      "title": "Prod",
-      "type": "table"
+      "title": "Prod US - Overall Automation Rate",
+      "type": "gauge"
     },
     {
       "datasource": {
         "type": "grafana-postgresql-datasource",
-        "uid": "dega8v6bs6mm8d"
+        "uid": "fpusda6bs6mm8e"
       },
       "fieldConfig": {
         "defaults": {
@@ -493,13 +460,14 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 18
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 19
       },
-      "id": 6,
+      "id": 206,
       "options": {
+        "displayLabels": [],
         "legend": {
           "displayMode": "list",
           "placement": "bottom",
@@ -524,12 +492,12 @@
         {
           "datasource": {
             "type": "grafana-postgresql-datasource",
-            "uid": "dega8v6bs6mm8d"
+            "uid": "fpusda6bs6mm8e"
           },
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id, -- Hinzugefügt: Wir benötigen die Organisations-ID\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on,\n        LEAD(current_status) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_status\n    FROM public.document_log\n    WHERE \n        is_deleted = FALSE\n        AND $__timeFilter(created_on)\n),\nautomated_counts AS (\n    SELECT\n        oc.name AS org_name, \n        d.doc_type, \n        COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        ) AS automated_documents_count\n    FROM status_changes sc\n    JOIN public.documents d \n        ON sc.doc_id = d.id \n    -- NEU: Join zur Organisationstabelle\n    JOIN public.organisation_cache oc\n        -- Konvertierung beider Seiten zu UUID, um Typfehler zu vermeiden\n        ON sc.org_id::uuid = oc.id::uuid\n    \n    -- ##################################################################\n    -- NEUE FILTERUNG: Fügt den Grafana Dropdown-Filter '$org_prod' ein\n    WHERE \n        oc.name IN ($org_prod) \n    -- ##################################################################\n\n    -- GRUPPIERUNG NACH BEIDEN FELDERN\n    GROUP BY oc.name, d.doc_type\n    \n    HAVING COUNT(sc.doc_id) FILTER (\n            WHERE \n                sc.current_status = 'ready_for_validation'\n                AND sc.next_created_on IS NOT NULL\n                AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 60\n        ) > 0\n)\nSELECT\n    org_name AS \"Organization\", \n    doc_type AS \"Document Type\",\n    automated_documents_count AS \"Automated Documents Count\",\n    -- BERECHNUNG: Anteil des Typs an der Gesamtsumme\n    ROUND(\n        (automated_documents_count::NUMERIC * 100) / \n        SUM(automated_documents_count) OVER (), \n        2\n    )::TEXT || '%' AS \"Automation Share Percent\"\n\nFROM automated_counts\nORDER BY \n    \"Organization\", \n    \"Automated Documents Count\" DESC;",
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n),\nautomated_counts AS (\n    SELECT\n        oc.name AS org_name,\n        q.doc_type,\n        COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS automated_documents_count\n    FROM qualified q\n    JOIN public.organisation_cache oc ON q.org_id = oc.id\n    WHERE oc.name IN ($org_prod_us)\n    GROUP BY oc.name, q.doc_type\n    HAVING COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) > 0\n)\nSELECT\n    org_name AS \"Organization\",\n    doc_type AS \"Document Type\",\n    automated_documents_count AS \"Automated Documents Count\",\n    ROUND(\n        (automated_documents_count::NUMERIC * 100) / SUM(automated_documents_count) OVER (),\n        2\n    )::TEXT || '%' AS \"Automation Share Percent\"\nFROM automated_counts\nORDER BY \"Organization\", \"Automated Documents Count\" DESC;",
           "refId": "A",
           "sql": {
             "columns": [
@@ -550,8 +518,673 @@
           }
         }
       ],
-      "title": "Automation Breakdown by Document Type(Prod)",
+      "title": "Automation Breakdown by Document Type (Prod US)",
       "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "fpusda6bs6mm8e"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-orange",
+                "value": 20
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              },
+              {
+                "color": "semi-dark-green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 25
+      },
+      "id": 207,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "fpusda6bs6mm8e"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    oc.name AS \"Organization\",\n    COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS \"Automated Documents\",\n    COUNT(*) AS \"Total Documents\",\n    (ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ))::TEXT || '%' AS \"Automation Rate Percent\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_prod_us)\nGROUP BY oc.name\nORDER BY ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ) DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Prod US - Automation Rate by Organization",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 208,
+      "panels": [],
+      "title": "Sandbox EU",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sbeuda6bs6mm8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 34
+      },
+      "id": 209,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sbeuda6bs6mm8f"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        1\n    ) AS \"Automation Rate\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_sandbox_eu);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Sandbox EU - Overall Automation Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sbeuda6bs6mm8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 34
+      },
+      "id": 210,
+      "options": {
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sbeuda6bs6mm8f"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n),\nautomated_counts AS (\n    SELECT\n        oc.name AS org_name,\n        q.doc_type,\n        COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS automated_documents_count\n    FROM qualified q\n    JOIN public.organisation_cache oc ON q.org_id = oc.id\n    WHERE oc.name IN ($org_sandbox_eu)\n    GROUP BY oc.name, q.doc_type\n    HAVING COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) > 0\n)\nSELECT\n    org_name AS \"Organization\",\n    doc_type AS \"Document Type\",\n    automated_documents_count AS \"Automated Documents Count\",\n    ROUND(\n        (automated_documents_count::NUMERIC * 100) / SUM(automated_documents_count) OVER (),\n        2\n    )::TEXT || '%' AS \"Automation Share Percent\"\nFROM automated_counts\nORDER BY \"Organization\", \"Automated Documents Count\" DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Automation Breakdown by Document Type (Sandbox EU)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sbeuda6bs6mm8f"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-orange",
+                "value": 20
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              },
+              {
+                "color": "semi-dark-green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 40
+      },
+      "id": 211,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sbeuda6bs6mm8f"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    oc.name AS \"Organization\",\n    COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS \"Automated Documents\",\n    COUNT(*) AS \"Total Documents\",\n    (ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ))::TEXT || '%' AS \"Automation Rate Percent\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_sandbox_eu)\nGROUP BY oc.name\nORDER BY ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ) DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Sandbox EU - Automation Rate by Organization",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 212,
+      "panels": [],
+      "title": "Sandbox US",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sbusda6bs6mm8g"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 49
+      },
+      "id": 213,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sbusda6bs6mm8g"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        1\n    ) AS \"Automation Rate\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_sandbox_us);",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Sandbox US - Overall Automation Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sbusda6bs6mm8g"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 18,
+        "x": 6,
+        "y": 49
+      },
+      "id": 214,
+      "options": {
+        "displayLabels": [],
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sbusda6bs6mm8g"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n),\nautomated_counts AS (\n    SELECT\n        oc.name AS org_name,\n        q.doc_type,\n        COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS automated_documents_count\n    FROM qualified q\n    JOIN public.organisation_cache oc ON q.org_id = oc.id\n    WHERE oc.name IN ($org_sandbox_us)\n    GROUP BY oc.name, q.doc_type\n    HAVING COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) > 0\n)\nSELECT\n    org_name AS \"Organization\",\n    doc_type AS \"Document Type\",\n    automated_documents_count AS \"Automated Documents Count\",\n    ROUND(\n        (automated_documents_count::NUMERIC * 100) / SUM(automated_documents_count) OVER (),\n        2\n    )::TEXT || '%' AS \"Automation Share Percent\"\nFROM automated_counts\nORDER BY \"Organization\", \"Automated Documents Count\" DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Automation Breakdown by Document Type (Sandbox US)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "sbusda6bs6mm8g"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-orange",
+                "value": 20
+              },
+              {
+                "color": "#EAB839",
+                "value": 50
+              },
+              {
+                "color": "semi-dark-green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 55
+      },
+      "id": 215,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "sbusda6bs6mm8g"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH status_changes AS (\n    SELECT\n        org_id,\n        doc_id,\n        current_status,\n        created_on,\n        LEAD(created_on) OVER (PARTITION BY doc_id ORDER BY created_on) AS next_created_on\n    FROM public.document_log\n    WHERE is_deleted = FALSE\n      AND $__timeFilter(created_on)\n),\nqualified AS (\n    SELECT\n        sc.org_id,\n        sc.doc_id,\n        d.doc_type,\n        d.auto_processed,\n        (sc.next_created_on IS NOT NULL AND EXTRACT(EPOCH FROM (sc.next_created_on - sc.created_on)) < 5) AS fast_transition\n    FROM status_changes sc\n    JOIN public.documents d ON sc.doc_id = d.id\n    WHERE sc.current_status = 'ready_for_validation'\n)\nSELECT\n    oc.name AS \"Organization\",\n    COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition) AS \"Automated Documents\",\n    COUNT(*) AS \"Total Documents\",\n    (ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ))::TEXT || '%' AS \"Automation Rate Percent\"\nFROM qualified q\nJOIN public.organisation_cache oc ON q.org_id = oc.id\nWHERE oc.name IN ($org_sandbox_us)\nGROUP BY oc.name\nORDER BY ROUND(\n        (COUNT(*) FILTER (WHERE q.auto_processed IS TRUE OR q.fast_transition)::NUMERIC * 100)\n        / NULLIF(COUNT(*), 0),\n        2\n    ) DESC;",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Sandbox US - Automation Rate by Organization",
+      "type": "table"
     }
   ],
   "preload": false,
@@ -562,21 +1195,21 @@
       {
         "current": {
           "text": [
-            "Ruiz Foods 2"
+            "All"
           ],
           "value": [
-            "Ruiz Foods 2"
+            "$__all"
           ]
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
-          "uid": "betod90qal8g0e"
+          "uid": "apiprodeu01"
         },
         "definition": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
         "includeAll": true,
-        "label": "org_sandbox",
+        "label": "org_prod_eu",
         "multi": true,
-        "name": "org_sandbox",
+        "name": "org_prod_eu",
         "options": [],
         "query": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
         "refresh": 1,
@@ -586,20 +1219,69 @@
       {
         "current": {
           "text": [
-            "Amalthea Group BV"
+            "All"
           ],
           "value": [
-            "Amalthea Group BV"
+            "$__all"
           ]
         },
         "datasource": {
           "type": "grafana-postgresql-datasource",
-          "uid": "dega8v6bs6mm8d"
+          "uid": "fpusda6bs6mm8e"
         },
         "definition": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
         "includeAll": true,
+        "label": "org_prod_us",
         "multi": true,
-        "name": "org_prod",
+        "name": "org_prod_us",
+        "options": [],
+        "query": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "sbeuda6bs6mm8f"
+        },
+        "definition": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
+        "includeAll": true,
+        "label": "org_sandbox_eu",
+        "multi": true,
+        "name": "org_sandbox_eu",
+        "options": [],
+        "query": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
+        "refresh": 1,
+        "regex": "",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "sbusda6bs6mm8g"
+        },
+        "definition": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
+        "includeAll": true,
+        "label": "org_sandbox_us",
+        "multi": true,
+        "name": "org_sandbox_us",
         "options": [],
         "query": "SELECT DISTINCT oc.name\nFROM public.organisation_cache oc\nJOIN public.document_log dl ON oc.id = dl.org_id\nWHERE dl.is_deleted = FALSE\n  AND $__timeFilter(dl.created_on)\nORDER BY oc.name;",
         "refresh": 1,
@@ -626,5 +1308,5 @@
   "timezone": "browser",
   "title": "Automated Document Processing Report",
   "uid": "d6bfc7e3-3e7d-4ecb-a2f6-dd9acc25286a",
-  "version": 25
+  "version": 26
 }
