@@ -1,0 +1,1182 @@
+{
+  "uid": "docbits-performance-triage",
+  "title": "DocBits · Performance: Was stockt und wo?",
+  "schemaVersion": 39,
+  "version": 0,
+  "editable": true,
+  "tags": [
+    "docbits",
+    "performance"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "Hier beginnen",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**1. Messqualität prüfen → 2. langsamen Endpunkt wählen → 3. Phasen und Ressourcen zur selben Zeit vergleichen.**\n\nRequestwerte werden erst angezeigt, wenn alle erreichbaren API-Pods die korrigierte Workerzusammenführung melden und Histogramm-Count/+Inf übereinstimmen. Fehlende Messungen sind keine Nullwerte. Phasen können sich überlappen; sie ergeben zusammen keine CPU-Zeit. Requestdauer endet an Antwortheaders, nicht an fertiger Browseransicht. Worker-Import ist keine ASGI-Bereitschaft.\n\nProd besitzt derzeit noch keine freigegebene Requestmessung. Ressourcenwerte können bereits bei der Diagnose helfen; sie beweisen allein keine Ursache."
+      }
+    },
+    {
+      "id": 2,
+      "title": "Requestmessung freigegeben?",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 5,
+        "w": 12,
+        "h": 4
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0)) or vector(0)",
+          "legendFormat": "Qualität",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Noch nicht belastbar",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Workerzusammenführung aktiv",
+                  "color": "green"
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Messlücken: Phasen / Worker / Event Loop",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 5,
+        "w": 12,
+        "h": 4
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(docbits_request_component_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}) or vector(0)",
+          "legendFormat": "Phasen vorhanden",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "expr": "count(docbits_api_imported_workers{namespace=\"$environment\",job=\"api-service\"}) or vector(0)",
+          "legendFormat": "Worker-Messung vorhanden",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        },
+        {
+          "refId": "C",
+          "expr": "count(asyncio_event_loop_lag_seconds_count{namespace=\"$environment\",job=\"api-service\"}) or vector(0)",
+          "legendFormat": "Event-Loop-Messung vorhanden",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Endpunkte: Requests über 1 s in 5 min",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 24,
+        "h": 6
+      },
+      "description": "Geschätzte Häufigkeiten aus Counter-Zuwächsen. Nur bei freigegebener Messung; 3-s-Bucket benötigt neue API-Version.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(topk(10, sum by(endpoint,method)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m])) - sum by(endpoint,method)(increase(docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"1.0\"}[5m])))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "langsame Requests",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "endpoint": "Endpunkt",
+              "method": "Methode",
+              "Value": "Requests über Schwelle (5 min)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Endpunkte: Requests über 3 s in 5 min",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 15,
+        "w": 24,
+        "h": 6
+      },
+      "description": "Geschätzte Häufigkeiten aus Counter-Zuwächsen. Nur bei freigegebener Messung; 3-s-Bucket benötigt neue API-Version.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(topk(10, sum by(endpoint,method)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m])) - sum by(endpoint,method)(increase(docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"3.0\"}[5m])))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "langsame Requests",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "endpoint": "Endpunkt",
+              "method": "Methode",
+              "Value": "Requests über Schwelle (5 min)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Endpunkte: Requests über 5 s in 5 min",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 6
+      },
+      "description": "Geschätzte Häufigkeiten aus Counter-Zuwächsen. Nur bei freigegebener Messung; 3-s-Bucket benötigt neue API-Version.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(topk(10, sum by(endpoint,method)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m])) - sum by(endpoint,method)(increase(docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"5.0\"}[5m])))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "langsame Requests",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "endpoint": "Endpunkt",
+              "method": "Methode",
+              "Value": "Requests über Schwelle (5 min)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Durchsatz je Endpunkt",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by(endpoint)(rate(docbits_request_total{namespace=\"$environment\",job=\"api-service\"}[5m]))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "{{endpoint}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "HTTP-Fehleranteil je Endpunkt",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 8
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by(endpoint)(rate(docbits_request_total{namespace=\"$environment\",job=\"api-service\",status_code=~\"5..\"}[5m])) / sum by(endpoint)(rate(docbits_request_total{namespace=\"$environment\",job=\"api-service\"}[5m]))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "{{endpoint}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "p95 Requestdauer – mindestens 200 Beobachtungen / 5 min",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Histogrammschätzung; keine belastbaren Quantile aus alten Worker-Messungen.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(histogram_quantile(0.95,sum by(endpoint,le)(rate(docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\"}[5m]))) and on(endpoint) (sum by(endpoint)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m])) >= 200)) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "{{endpoint}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Beobachtungen je Endpunkt / 5 min",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 35,
+        "w": 12,
+        "h": 8
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by(endpoint)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m]))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "{{endpoint}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Wo wartet es? Gemessene Phasen",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 43,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Durchschnitt nur für Requests mit erfasster Komponente. Fehlende Auth/Pool/Upstream-Phasen bleiben ungemessen. Keine additive Zerlegung.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by(endpoint,component)(rate(docbits_request_component_duration_seconds_sum{namespace=\"$environment\",job=\"api-service\"}[5m])) / sum by(endpoint,component)(rate(docbits_request_component_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m]))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "{{endpoint}} · {{component}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 12,
+      "title": "Workerwechsel auf derselben Zeitachse",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 43,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Importierte Worker sind keine garantierten bereitstehenden ASGI-Worker. Fehlende Reihe heißt: Hooks noch nicht ausgeliefert.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(event)(increase(docbits_api_worker_events_total{namespace=\"$environment\",job=\"api-service\"}[1m]))",
+          "legendFormat": "{{event}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(docbits_api_imported_workers{namespace=\"$environment\",job=\"api-service\"})",
+          "legendFormat": "Importierte Worker",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 13,
+      "title": "CPU-Nutzung und Drosselung",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 12,
+        "h": 8
+      },
+      "description": "CPU Kerne und Anteil gedrosselter Schedulingperioden; unterschiedliche Einheiten, Legende beachten.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(pod)(rate(container_cpu_usage_seconds_total{namespace=\"$environment\",pod=~\"api-service-.*\",container=\"api-service\"}[5m]))",
+          "legendFormat": "{{pod}} CPU Kerne",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by(pod)(rate(container_cpu_cfs_throttled_periods_total{namespace=\"$environment\",pod=~\"api-service-.*\",container=\"api-service\"}[5m])) / sum by(pod)(rate(container_cpu_cfs_periods_total{namespace=\"$environment\",pod=~\"api-service-.*\",container=\"api-service\"}[5m]))",
+          "legendFormat": "{{pod}} Drosselanteil",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 14,
+      "title": "Speicher je API-Pod",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 51,
+        "w": 12,
+        "h": 8
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "container_memory_working_set_bytes{namespace=\"$environment\",pod=~\"api-service-.*\",container=\"api-service\"}",
+          "legendFormat": "{{pod}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 15,
+      "title": "Pod-Ready und Container-Neustarts",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 59,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Container-Neustarts sind keine Gunicorn-Workerwechsel.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(kube_pod_status_ready{namespace=\"$environment\",pod=~\"api-service-.*\",condition=\"true\"})",
+          "legendFormat": "Ready",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"$environment\",pod=~\"api-service-.*\",container=\"api-service\"}[5m]))",
+          "legendFormat": "Container-Neustarts",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 16,
+      "title": "Event-Loop-Verzögerung p95",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 59,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Sampler-Latenz, nicht HTTP-p95; muss noch je Umgebung verfügbar sein.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by(le)(rate(asyncio_event_loop_lag_seconds_bucket{namespace=\"$environment\",job=\"api-service\"}[5m])))",
+          "legendFormat": "Event Loop",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 17,
+      "title": "Executor-Warteschlange – gescrapter Worker",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 67,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Custom Collector beobachtet nur den gescrapten Worker. Kein vollständiger Podwert.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "asyncio_default_executor_queue_depth{namespace=\"$environment\",job=\"api-service\"}",
+          "legendFormat": "{{pod}} / {{worker_pid}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 18,
+      "title": "Redis-Poolwartezeit p95",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 67,
+        "w": 12,
+        "h": 8
+      },
+      "description": "Bestehende Workerhistogramme erst nach Zusammenführung freigegeben; hier ebenfalls gated.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(histogram_quantile(0.95,sum by(le)(rate(redis_connection_pool_wait_seconds_bucket{namespace=\"$environment\",job=\"api-service\"}[5m])))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "Redis Pool",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 19,
+      "title": "Redis-Cache-Trefferanteil",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 75,
+        "w": 12,
+        "h": 8
+      },
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum by(cache_group)(rate(redis_cache_hits_total{namespace=\"$environment\",job=\"api-service\"}[5m])) / (sum by(cache_group)(rate(redis_cache_hits_total{namespace=\"$environment\",job=\"api-service\"}[5m])) + sum by(cache_group)(rate(redis_cache_misses_total{namespace=\"$environment\",job=\"api-service\"}[5m])))) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "{{cache_group}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "format": "time_series"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "Messung fehlt / noch nicht freigegeben"
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    },
+    {
+      "id": 20,
+      "title": "Automatischer Hinweis: anhaltend langsame Endpunkte",
+      "type": "table",
+      "gridPos": {
+        "x": 0,
+        "y": 83,
+        "w": 24,
+        "h": 6
+      },
+      "description": "Hinweis bei mehr als 5% Requests über 1 s in 5 min und mindestens 200 Beobachtungen. Kein Ursachenbeweis.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "((sum by(endpoint)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m])) - sum by(endpoint)(increase(docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"1.0\"}[5m]))) / sum by(endpoint)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m])) > 0.05 and on(endpoint) (sum by(endpoint)(increase(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"}[5m])) >= 200)) and on() ((min(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == 1) and (count(docbits_api_metrics_multiprocess_enabled{namespace=\"$environment\",job=\"api-service\"}) == count(up{namespace=\"$environment\",job=\"api-service\"} == 1)) unless (count(docbits_request_duration_seconds_count{namespace=\"$environment\",job=\"api-service\"} != ignoring(le) docbits_request_duration_seconds_bucket{namespace=\"$environment\",job=\"api-service\",le=\"+Inf\"}) > 0))",
+          "legendFormat": "{{endpoint}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "noValue": "Messung fehlt / noch nicht freigegeben",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          },
+          "custom": {
+            "cellOptions": {
+              "type": "color-background"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi"
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Langsame Requests / Workerereignisse (Logs)",
+      "type": "link",
+      "url": "/explore?schemaVersion=1&panes={%22p%22%3A{%22datasource%22%3A%22loki%22%2C%22queries%22%3A%5B{%22refId%22%3A%22A%22%2C%22datasource%22%3A{%22type%22%3A%22loki%22%2C%22uid%22%3A%22loki%22}%2C%22query%22%3A%22{namespace%3D%5C%22$environment%5C%22}%20%7C~%20%5C%22api_slow_request_headers%7Capi_worker_%28forked%7Capp_import_completed%7Cexited%29%5C%22%22%2C%22expr%22%3A%22{namespace%3D%5C%22$environment%5C%22}%20%7C~%20%5C%22api_slow_request_headers%7Capi_worker_%28forked%7Capp_import_completed%7Cexited%29%5C%22%22%2C%22queryType%22%3A%22range%22}%5D%2C%22range%22%3A{%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22}}}&orgId=1",
+      "targetBlank": true
+    },
+    {
+      "title": "Langsame API-Traces suchen (Zeitfenster)",
+      "type": "link",
+      "url": "/explore?schemaVersion=1&panes={%22p%22%3A{%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B{%22refId%22%3A%22A%22%2C%22datasource%22%3A{%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22}%2C%22query%22%3A%22{%20resource.service.name%20%3D%20%5C%22doc2-api%5C%22%20%26%26%20duration%20%3E%201s%20}%22%2C%22expr%22%3A%22{%20resource.service.name%20%3D%20%5C%22doc2-api%5C%22%20%26%26%20duration%20%3E%201s%20}%22%2C%22queryType%22%3A%22range%22}%5D%2C%22range%22%3A{%22from%22%3A%22${__from}%22%2C%22to%22%3A%22${__to}%22}}}&orgId=1",
+      "targetBlank": true
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "label": "Umgebung",
+        "type": "custom",
+        "query": "prod,prod-nova,sandbox,sandbox-nova,dev,dev-nova,stage,stage-nova,demo",
+        "current": {
+          "text": "prod",
+          "value": "prod"
+        },
+        "options": [
+          {
+            "text": "prod",
+            "value": "prod",
+            "selected": true
+          },
+          {
+            "text": "prod-nova",
+            "value": "prod-nova",
+            "selected": false
+          },
+          {
+            "text": "sandbox",
+            "value": "sandbox",
+            "selected": false
+          },
+          {
+            "text": "sandbox-nova",
+            "value": "sandbox-nova",
+            "selected": false
+          },
+          {
+            "text": "dev",
+            "value": "dev",
+            "selected": false
+          },
+          {
+            "text": "dev-nova",
+            "value": "dev-nova",
+            "selected": false
+          },
+          {
+            "text": "stage",
+            "value": "stage",
+            "selected": false
+          },
+          {
+            "text": "stage-nova",
+            "value": "stage-nova",
+            "selected": false
+          },
+          {
+            "text": "demo",
+            "value": "demo",
+            "selected": false
+          }
+        ]
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  }
+}
